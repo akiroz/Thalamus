@@ -1,6 +1,31 @@
 {
-  "dependencies": {
-    "@akiroz/pubsub-rpc": "^0.0.7",
-    "async-mqtt": "^2.6.1"
-  }
+    "name": "@akiroz/thalamus",
+    "version": "0.0.1",
+    "repository": "github:akiroz/Thalamus",
+    "main": "dist/thalamus.js",
+    "types": "dist/thalamus.d.ts",
+    "scripts": {
+        "prepublish": "tsc"
+    },
+    "devDependencies": {
+        "@types/node": "^13.9.1",
+        "husky": "^4.2.3",
+        "prettier": "^1.19.1",
+        "pretty-quick": "^2.0.1",
+        "typescript": "^3.8.3"
+    },
+    "prettier": {
+        "tabWidth": 4,
+        "trailingComma": "es5",
+        "printWidth": 120
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "tsc --noEmit && pretty-quick --staged"
+        }
+    },
+    "dependencies": {
+        "@akiroz/pubsub-rpc": "^0.0.7",
+        "async-mqtt": "^2.6.1"
+    }
 }
