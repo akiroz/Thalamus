@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@akiroz/pubsub-rpc": "^0.0.7",
+    "async-mqtt": "^2.6.1"
+  }
+}
