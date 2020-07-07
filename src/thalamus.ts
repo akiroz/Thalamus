@@ -4,17 +4,18 @@ import * as RPC from "@akiroz/pubsub-rpc";
 
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
 
-export default class Thalamus {
+export default class Thalamus extends EventEmitter {
     ee = new EventEmitter();
     servers: MQTT.AsyncMqttClient[];
 
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
+        super();
         if (serverOptList.length < 1) throw Error("No MQTT servers");
         this.servers = serverOptList.map(opt => MQTT.connect(opt));
         for (let i = 0; i < this.servers.length; i++) {
-            this.servers[i].on("connect", () => console.log(`[Thalamus] MQTT(${i}) Connect`));
-            this.servers[i].on("close", () => console.log(`[Thalamus] MQTT(${i}) Disconnect`));
-            this.servers[i].on("error", err => console.error(`[Thalamus] MQTT(${i})`, err));
+            this.servers[i].on("connect", () => this.emit("connect", i));
+            this.servers[i].on("close", () => this.emit("close", i));
+            this.servers[i].on("error", err => this.emit("error", err, i));
             this.servers[i].on("message", (topic, message) => this.ee.emit(topic, message, topic));
         }
     }
