@@ -1,5 +1,7 @@
 # Thalamus
 
+[![](https://img.shields.io/npm/v/@akiroz/thalamus)](https://www.npmjs.com/package/@akiroz/thalamus)
+
 An opinionated application messaging framework based on MQTT.
 
 ### Differences from plain MQTT
