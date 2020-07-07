@@ -2,13 +2,13 @@
 # yarn lockfile v1
 
 
-"@akiroz/pubsub-rpc@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@akiroz/pubsub-rpc/-/pubsub-rpc-0.0.7.tgz#16623d0e9c62cfbe677ad2b37c882ff0519caf06"
-  integrity sha512-eq4OeiQ972utJZazVSqBgrKfGUa24UF74T99/vDyMuGq5SN6XUfwa0bRDy6ETGqV9t6f0FBvTuHiZQvbSdQILQ==
+"@akiroz/pubsub-rpc@^0.0.9":
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/@akiroz/pubsub-rpc/-/pubsub-rpc-0.0.9.tgz#1ed41408c61cbf282ea149a677fbad49492723f1"
+  integrity sha512-l+7AxNikXuzlkortPrTh2G0yuL3szMYtz7f7dp5wvOQxV0fo5EB7zXn1ZfqmMHr80tt8Hg+KEBPCqXO0xezIYg==
   dependencies:
     "@msgpack/msgpack" "^1.12.1"
-    eventemitter2 "^6.4.0"
+    events "^3.1.0"
 
 "@babel/code-frame@^7.0.0":
   version "7.10.4"
@@ -349,11 +349,6 @@ event-emitter@~0.3.5:
   dependencies:
     d "1"
     es5-ext "~0.10.14"
-
-eventemitter2@^6.4.0:
-  version "6.4.3"
-  resolved "https://registry.yarnpkg.com/eventemitter2/-/eventemitter2-6.4.3.tgz#35c563619b13f3681e7eb05cbdaf50f56ba58820"
-  integrity sha512-t0A2msp6BzOf+QAcI6z9XMktLj52OjGQg+8SJH6v5+3uxNpWYRR3wQmfA+6xtMU9kOC59qk9licus5dYcrYkMQ==
 
 events@^3.1.0:
   version "3.1.0"

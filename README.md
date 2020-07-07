@@ -15,4 +15,11 @@ implement their own retry mechanisms.
 
 ### API
 
-TODO: Add Docs
+#### `class Thalamus`
+
+-   `constructor(serverOptList: MQTT.IClientOptions[])`
+-   `async publish(topic: string, payload: Uint8Array)`
+-   `async subscribe(topic: string, handler: SubHandler)`
+-   `async unsubscribe(topic: string, handler?: SubHandler)`
+-   `async call(topic: string, params: Param = {}, opt = defaultOptions): Promise<Result>`
+-   `async register(topic: string, handler: (param, topic) => Result)`
