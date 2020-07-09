@@ -19,9 +19,19 @@ implement their own retry mechanisms.
 
 #### `class Thalamus`
 
--   `constructor(serverOptList: MQTT.IClientOptions[])`
--   `async publish(topic: string, payload: Uint8Array)`
--   `async subscribe(topic: string, handler: SubHandler)`
--   `async unsubscribe(topic: string, handler?: SubHandler)`
--   `async call(topic: string, params: Param = {}, opt = defaultOptions): Promise<Result>`
--   `async register(topic: string, handler: (param, topic) => Result)`
+-  `constructor(serverOptList: MQTT.IClientOptions[])`
+
+- `thalamus.servers` List of MQTT client objects
+
+-  `async publish(topic: string, payload: Uint8Array)`
+-  `async subscribe(topic: string, handler: SubHandler)`
+-  `async unsubscribe(topic: string, handler?: SubHandler)`
+-  `async call(topic: string, params: Param = {}, opt = defaultOptions): Promise<Result>`
+-  `async register(topic: string, handler: (param, topic) => Result)`
+
+- `thalamus.ee.setMaxListeners(n)` Set maximum listeners for `subscribe` & `register`
+
+- `thalamus.on("connect", (i) => {})` server `i` connected (i = 0-based index)
+- `thalamus.on("close", (i) => {})` server `i` disconnected (i = 0-based index)
+- `thalamus.on("error", (err, i) => {})` server `i` error (i = 0-based index)
+
