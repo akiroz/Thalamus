@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
 import * as MQTT from "async-mqtt";
-import * as promiseAny from "promise.any";
+import promiseAny from "promise.any";
 import * as RPC from "@akiroz/pubsub-rpc";
 
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
