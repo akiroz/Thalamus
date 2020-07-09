@@ -1,6 +1,6 @@
 import { EventEmitter } from "events";
+import pAny from "p-any";
 import * as MQTT from "async-mqtt";
-import promiseAny from "promise.any";
 import * as RPC from "@akiroz/pubsub-rpc";
 
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
@@ -38,13 +38,13 @@ export default class Thalamus extends EventEmitter {
 
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
         this.ee.addListener(topic, handler);
-        await promiseAny(this.servers.map(srv => srv.subscribe(topic)));
+        await pAny(this.servers.map(srv => srv.subscribe(topic)));
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
         if (handler) this.ee.removeListener(topic, handler);
         else this.ee.removeAllListeners(topic);
-        await promiseAny(this.servers.map(srv => srv.unsubscribe(topic)));
+        await pAny(this.servers.map(srv => srv.unsubscribe(topic)));
     }
 
     async register<P extends RPC.RPCParamResult, R extends RPC.RPCParamResult>(

@@ -1,6 +1,6 @@
 {
     "name": "@akiroz/thalamus",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "repository": "github:akiroz/Thalamus",
     "main": "dist/thalamus.js",
     "types": "dist/thalamus.d.ts",
@@ -28,6 +28,6 @@
         "@akiroz/pubsub-rpc": "^0.0.9",
         "async-mqtt": "^2.6.1",
         "events": "^3.1.0",
-        "promise.any": "^2.0.1"
+        "p-any": "^3.0.0"
     }
 }
