@@ -37,7 +37,14 @@ export default class Thalamus extends EventEmitter {
 
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
         this.ee.addListener(topic, handler);
-        await Promise.all(this.servers.map(serv => serv.subscribe(topic)));
+        await Promise.all(
+            this.servers.map(serv => {
+                return serv.subscribe(topic).catch(err => {
+                    if (!serv.connected) return null; // Ignore fail due to disconnect
+                    return Promise.reject(err);
+                });
+            })
+        );
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
@@ -46,7 +53,14 @@ export default class Thalamus extends EventEmitter {
         } else {
             this.ee.removeAllListeners(topic);
         }
-        await Promise.all(this.servers.map(serv => serv.unsubscribe(topic)));
+        await Promise.all(
+            this.servers.map(serv => {
+                return serv.unsubscribe(topic).catch(err => {
+                    if (!serv.connected) return null; // Ignore fail due to disconnect
+                    return Promise.reject(err);
+                });
+            })
+        );
     }
 
     async register<P extends RPC.RPCParamResult, R extends RPC.RPCParamResult>(
