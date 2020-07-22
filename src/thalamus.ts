@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { MQEmitter } from "mqemitter";
+import * as MQEmitter from "mqemitter";
 import pAny from "p-any";
 import * as MQTT from "async-mqtt";
 import * as RPC from "@akiroz/pubsub-rpc";
@@ -8,7 +8,8 @@ type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
 
 export default class Thalamus extends EventEmitter {
     handlers = {} as { [topic: string]: Set<SubHandler> };
-    emitter = MQEmitter();
+    // @ts-ignore emitter wrong type declaration
+    emitter = new MQEmitter();
     servers: MQTT.AsyncMqttClient[];
 
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
