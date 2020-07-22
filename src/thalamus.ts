@@ -1,4 +1,5 @@
 import { EventEmitter } from "events";
+import { MQEmitter } from "mqemitter";
 import pAny from "p-any";
 import * as MQTT from "async-mqtt";
 import * as RPC from "@akiroz/pubsub-rpc";
@@ -6,7 +7,8 @@ import * as RPC from "@akiroz/pubsub-rpc";
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
 
 export default class Thalamus extends EventEmitter {
-    ee = new EventEmitter();
+    handlers = {} as { [topic: string]: Set<SubHandler> };
+    emitter = MQEmitter();
     servers: MQTT.AsyncMqttClient[];
 
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
@@ -17,7 +19,8 @@ export default class Thalamus extends EventEmitter {
             this.servers[i].on("connect", () => this.emit("connect", i));
             this.servers[i].on("close", () => this.emit("close", i));
             this.servers[i].on("error", err => this.emit("error", err, i));
-            this.servers[i].on("message", (topic, message) => this.ee.emit(topic, message, topic));
+            // @ts-ignore emitter wrong type declaration
+            this.servers[i].on("message", (topic, message) => this.emitter.emit({ topic, message }));
         }
     }
 
@@ -37,13 +40,14 @@ export default class Thalamus extends EventEmitter {
     }
 
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
-        this.ee.addListener(topic, handler);
+        // @ts-ignore emitter wrong type declaration
+        this.emitter.on(topic, handler);
         await pAny(this.servers.map(srv => srv.subscribe(topic)));
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
-        if (handler) this.ee.removeListener(topic, handler);
-        else this.ee.removeAllListeners(topic);
+        // @ts-ignore emitter wrong type declaration
+        this.emitter.removeListener(topic, handler);
         await pAny(this.servers.map(srv => srv.unsubscribe(topic)));
     }
 

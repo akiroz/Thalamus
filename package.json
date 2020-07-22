@@ -28,6 +28,7 @@
         "@akiroz/pubsub-rpc": "^0.0.9",
         "async-mqtt": "^2.6.1",
         "events": "^3.1.0",
+        "mqemitter": "^4.2.0",
         "p-any": "^3.0.0"
     }
 }
