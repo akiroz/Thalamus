@@ -1,16 +1,16 @@
 import { EventEmitter } from "events";
-import MQEmitter from "mqemitter";
+import MQEmitter, { Message } from "@akiroz/mqemitter";
 import pAny from "p-any";
 import * as MQTT from "async-mqtt";
 import * as RPC from "@akiroz/pubsub-rpc";
 
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
+type MQHandler = (message: { topic: string; message: Uint8Array }, done: () => void) => void;
 
 export default class Thalamus extends EventEmitter {
-    handlers = {} as { [topic: string]: Set<SubHandler> };
-    // @ts-ignore emitter wrong type declaration
-    emitter = new MQEmitter();
+    emitter = MQEmitter();
     servers: MQTT.AsyncMqttClient[];
+    handlers = new WeakMap<SubHandler, MQHandler>();
 
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
         super();
@@ -20,8 +20,7 @@ export default class Thalamus extends EventEmitter {
             this.servers[i].on("connect", () => this.emit("connect", i));
             this.servers[i].on("close", () => this.emit("close", i));
             this.servers[i].on("error", err => this.emit("error", err, i));
-            // @ts-ignore emitter wrong type declaration
-            this.servers[i].on("message", (topic, message) => this.emitter.emit({ topic, message }));
+            this.servers[i].on("message", (topic, message) => this.emitter.emit({ topic, message } as Message));
         }
     }
 
@@ -41,14 +40,14 @@ export default class Thalamus extends EventEmitter {
     }
 
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
-        // @ts-ignore emitter wrong type declaration
-        this.emitter.on(topic, handler);
+        const h = ({ topic, message }, done) => (done(), handler(message, topic));
+        this.handlers.set(handler, h);
+        this.emitter.on(topic, h);
         await pAny(this.servers.map(srv => srv.subscribe(topic)));
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
-        // @ts-ignore emitter wrong type declaration
-        this.emitter.removeListener(topic, handler);
+        this.emitter.removeListener(topic, handler && this.handlers.get(handler));
         await pAny(this.servers.map(srv => srv.unsubscribe(topic)));
     }
 

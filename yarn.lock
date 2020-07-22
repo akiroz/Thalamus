@@ -2,6 +2,14 @@
 # yarn lockfile v1
 
 
+"@akiroz/mqemitter@^4.2.2":
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/@akiroz/mqemitter/-/mqemitter-4.2.2.tgz#057bd96c243e47e27b0a5806a709afe02ebf3fed"
+  integrity sha512-FWuHn/wYhepTgLs9YDOr3agZ5R9xOpFiG129f2C+cqAum3oj5cz8sykX4fX7C7mEBwRAdSDW5RYX1KIKofqpTw==
+  dependencies:
+    fastparallel "^2.3.0"
+    qlobber "^5.0.0"
+
 "@akiroz/pubsub-rpc@^0.0.9":
   version "0.0.9"
   resolved "https://registry.yarnpkg.com/@akiroz/pubsub-rpc/-/pubsub-rpc-0.0.9.tgz#1ed41408c61cbf282ea149a677fbad49492723f1"
@@ -650,14 +658,6 @@ minimist@^1.1.0, minimist@^1.2.0:
   version "1.2.5"
   resolved "https://registry.yarnpkg.com/minimist/-/minimist-1.2.5.tgz#67d66014b66a6a8aaa0c083c5fd58df4e4e97602"
   integrity sha512-FM9nNUYrRBAELZQT3xeZQ7fmMOBg6nWNmJKTcgsJeaLstP/UODVpGsr5OhXhhXg6f+qtJ8uiZ+PUxkDWcgIXLw==
-
-mqemitter@^4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/mqemitter/-/mqemitter-4.2.0.tgz#a6f04f097757557b3c4482c7a14b9a297a7194fa"
-  integrity sha512-cAwS0+DfmsT9IDNkENo8uaiUjiN72c6rfGtW555ihl38gk1E91C7ZVF6sx040fVxMunCIDygMypyaCZ0L8X9UQ==
-  dependencies:
-    fastparallel "^2.3.0"
-    qlobber "^5.0.0"
 
 mqtt-packet@^6.0.0:
   version "6.3.2"
