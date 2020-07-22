@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as MQEmitter from "mqemitter";
+import MQEmitter from "mqemitter";
 import pAny from "p-any";
 import * as MQTT from "async-mqtt";
 import * as RPC from "@akiroz/pubsub-rpc";
