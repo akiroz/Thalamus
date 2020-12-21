@@ -15,11 +15,11 @@ export default class Thalamus extends EventEmitter {
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
         super();
         if (serverOptList.length < 1) throw Error("No MQTT servers");
-        this.servers = serverOptList.map(opt => MQTT.connect(opt));
+        this.servers = serverOptList.map((opt) => MQTT.connect(opt));
         for (let i = 0; i < this.servers.length; i++) {
             this.servers[i].on("connect", () => this.emit("connect", i));
             this.servers[i].on("close", () => this.emit("close", i));
-            this.servers[i].on("error", err => this.emit("error", err, i));
+            this.servers[i].on("error", (err) => this.emit("error", err, i));
             this.servers[i].on("message", (topic, message) => this.emitter.emit({ topic, message } as Message));
         }
     }
@@ -43,17 +43,17 @@ export default class Thalamus extends EventEmitter {
         const h = ({ topic, message }, done) => (done(), handler(message, topic));
         this.handlers.set(handler, h);
         this.emitter.on(topic, h);
-        await pAny(this.servers.map(srv => srv.subscribe(topic)));
+        await pAny(this.servers.map((srv) => srv.subscribe(topic)));
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
         this.emitter.removeListener(topic, handler && this.handlers.get(handler));
-        await pAny(this.servers.map(srv => srv.unsubscribe(topic)));
+        await pAny(this.servers.map((srv) => srv.unsubscribe(topic)));
     }
 
-    async register<P extends RPC.RPCParamResult, R extends RPC.RPCParamResult>(
+    async register<P extends RPC.RPCParamResult, R extends RPC.RPCParamResult, C>(
         topic: string,
-        handler: RPC.RPCHandler<P, R>
+        handler: RPC.RPCHandler<P, R, C>
     ) {
         await RPC.register(this, topic, handler);
     }
