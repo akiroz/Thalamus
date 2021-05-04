@@ -8,6 +8,13 @@ type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
 type MQHandler = (message: { topic: string; message: Uint8Array }, done: () => void) => void;
 
 export default class Thalamus extends EventEmitter {
+    subDebounceWindow = 100;
+    subDebounceState = null as {
+        topics: string[];
+        event: EventEmitter;
+        promise: Promise<void>;
+        timeout: NodeJS.Timeout;
+    };
     emitter = MQEmitter();
     servers: MQTT.AsyncMqttClient[];
     handlers = new WeakMap<SubHandler, MQHandler>();
@@ -39,11 +46,30 @@ export default class Thalamus extends EventEmitter {
         }
     }
 
+    async sendSubscribe() {
+        await pAny(this.servers.map((srv) => srv.subscribe(this.subDebounceState.topics)));
+        this.subDebounceState.event.emit("sub");
+        this.subDebounceState = null;
+    }
+
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
         const h = ({ topic, message }, done) => (done(), handler(message, topic));
         this.handlers.set(handler, h);
         this.emitter.on(topic, h);
-        await pAny(this.servers.map((srv) => srv.subscribe(topic)));
+        if (this.subDebounceState) {
+            this.subDebounceState.topics.push(topic);
+            clearTimeout(this.subDebounceState.timeout);
+            this.subDebounceState.timeout = setTimeout(() => this.sendSubscribe(), this.subDebounceWindow);
+        } else {
+            const event = new EventEmitter();
+            this.subDebounceState = {
+                topics: [topic],
+                event: event,
+                promise: new Promise((r) => event.once("sub", r)),
+                timeout: setTimeout(() => this.sendSubscribe(), this.subDebounceWindow),
+            };
+        }
+        await this.subDebounceState.promise;
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
