@@ -47,9 +47,13 @@ export default class Thalamus extends EventEmitter {
     }
 
     async sendSubscribe() {
-        await pAny(this.servers.map((srv) => srv.subscribe(this.subDebounceState.topics)));
-        this.subDebounceState.event.emit("sub");
-        this.subDebounceState = null;
+        try {
+            await pAny(this.servers.map((srv) => srv.subscribe(this.subDebounceState.topics)));
+            this.subDebounceState.event.emit("sub");
+            this.subDebounceState = null;
+        } catch (err) {
+            this.subDebounceState.event.emit("err", err);
+        }
     }
 
     async subscribe(topic: string, handler: SubHandler): Promise<void> {
@@ -65,7 +69,10 @@ export default class Thalamus extends EventEmitter {
             this.subDebounceState = {
                 topics: [topic],
                 event: event,
-                promise: new Promise((r) => event.once("sub", r)),
+                promise: new Promise((rsov, rjct) => {
+                    event.once("sub", rsov);
+                    event.once("err", rjct);
+                }),
                 timeout: setTimeout(() => this.sendSubscribe(), this.subDebounceWindow),
             };
         }
