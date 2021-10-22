@@ -6,15 +6,17 @@ import * as RPC from "@akiroz/pubsub-rpc";
 
 type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
 type MQHandler = (message: { topic: string; message: Uint8Array }, done: () => void) => void;
+type SubDebounceState = {
+    topics: string[];
+    event: EventEmitter;
+    promise: Promise<void>;
+    timeout: NodeJS.Timeout;
+};
+
 
 export default class Thalamus extends EventEmitter {
     subDebounceWindow = 100;
-    subDebounceState = null as {
-        topics: string[];
-        event: EventEmitter;
-        promise: Promise<void>;
-        timeout: NodeJS.Timeout;
-    };
+    subDebounceState = null as SubDebounceState;
     emitter = MQEmitter();
     servers: MQTT.AsyncMqttClient[];
     handlers = new WeakMap<SubHandler, MQHandler>();
@@ -46,13 +48,12 @@ export default class Thalamus extends EventEmitter {
         }
     }
 
-    async sendSubscribe() {
+    async sendSubscribe(subDebounceState: SubDebounceState) {
         try {
-            await pAny(this.servers.map((srv) => srv.subscribe(this.subDebounceState.topics)));
-            this.subDebounceState.event.emit("sub");
-            this.subDebounceState = null;
+            await pAny(this.servers.map((srv) => srv.subscribe(subDebounceState.topics)));
+            subDebounceState.event.emit("sub");
         } catch (err) {
-            this.subDebounceState.event.emit("err", err);
+            subDebounceState.event.emit("err", err);
         }
     }
 
@@ -63,7 +64,10 @@ export default class Thalamus extends EventEmitter {
         if (this.subDebounceState) {
             this.subDebounceState.topics.push(topic);
             clearTimeout(this.subDebounceState.timeout);
-            this.subDebounceState.timeout = setTimeout(() => this.sendSubscribe(), this.subDebounceWindow);
+            this.subDebounceState.timeout = setTimeout(() => {
+                this.sendSubscribe(this.subDebounceState);
+                this.subDebounceState = null;
+            }, this.subDebounceWindow);
         } else {
             const event = new EventEmitter();
             this.subDebounceState = {
@@ -73,7 +77,10 @@ export default class Thalamus extends EventEmitter {
                     event.once("sub", rsov);
                     event.once("err", rjct);
                 }),
-                timeout: setTimeout(() => this.sendSubscribe(), this.subDebounceWindow),
+                timeout: setTimeout(() => {
+                    this.sendSubscribe(this.subDebounceState);
+                    this.subDebounceState = null;
+                }, this.subDebounceWindow),
             };
         }
         await this.subDebounceState.promise;
