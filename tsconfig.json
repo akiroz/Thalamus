@@ -1,7 +1,9 @@
 {
     "compilerOptions": {
-        "lib": ["es2018"],
+        "lib": ["es2020"],
+        "target": "ES6",
         "esModuleInterop": true,
+        "moduleResolution": "node",
         "downlevelIteration": true,
         "declaration": true,
         "outDir": "dist"
