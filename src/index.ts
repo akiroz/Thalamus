@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import MQEmitter, { Message } from "mqemitter";
+import MQEmitter, { Message } from "@akiroz/mqemitter";
 import * as MQTT from "./asyncWrapper";
 import * as RPC from "./rpc";
 
