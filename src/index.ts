@@ -30,11 +30,13 @@ export default class Thalamus extends EventEmitter {
         for (let i = 0; i < this.servers.length; i++) {
             this.servers[i].on("connect", async () => {
                 this.emit("connect", i);
-                try {
-                    await this.servers[i].subscribeAsync([...this.persistantTopics], { qos: 0 });
-                } catch (err) {
-                    console.warn(`[Thalamus] re-subscribe failed, reconnect...`, err);
-                    this.servers[i].reconnect();
+                if(this.persistantTopics.size > 0) {
+                    try {
+                        await this.servers[i].subscribeAsync([...this.persistantTopics], { qos: 0 });
+                    } catch (err) {
+                        console.warn(`[Thalamus] re-subscribe failed, reconnect...`, err);
+                        this.servers[i].reconnect();
+                    }
                 }
             });
             this.servers[i].on("close", () => this.emit("close", i));
