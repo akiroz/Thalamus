@@ -1,6 +1,6 @@
 {
     "name": "@akiroz/thalamus",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "repository": "github:akiroz/Thalamus",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
     "dependencies": {
         "@msgpack/msgpack": "^2.7.2",
         "events": "^3.3.0",
-        "mqemitter": "^4.5.0",
+        "@akiroz/mqemitter": "^4.5.1",
         "mqtt": "^4.3.7"
     }
 }
