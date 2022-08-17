@@ -112,9 +112,9 @@ export default class Thalamus extends EventEmitter {
             await this.subDebounceState.promise;
         } else {
             const conn = this.servers.filter(s => s.connected);
-            await Promise.all(conn.map(s => s.subscribeAsync(topic, { qos: 0 })));
             this.handlers.set(handler, h);
             this.emitter.on(topic, h);
+            await Promise.all(conn.map(s => s.subscribeAsync(topic, { qos: 0 })));
         }
     }
 
