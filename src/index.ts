@@ -86,7 +86,8 @@ export default class Thalamus extends EventEmitter {
                 this.subDebounceState = {
                     doSubscribeLock: false,
                     topics: new Set([topic]),
-                    promise: new Promise(r => setTimeout(r, this.subDebounceWindow)).then(this.doSubscribe),
+                    promise: new Promise(r => setTimeout(r, this.subDebounceWindow))
+                        .then(() => this.doSubscribe()),
                 };
             }
             await this.subDebounceState.promise;
@@ -116,5 +117,9 @@ export default class Thalamus extends EventEmitter {
         opt: Partial<typeof RPC.defaultCallOptions> = RPC.defaultCallOptions
     ): Promise<R> {
         return await RPC.call(this, topic, params, opt);
+    }
+
+    close(force?: boolean) {
+        this.servers.forEach(s => s.end(force));
     }
 }

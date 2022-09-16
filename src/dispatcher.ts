@@ -1,7 +1,7 @@
 
 type Handler = (msg: Uint8Array, topic: string) => any;
 
-class Node {
+export class Node {
     paths = new Map<string, Node>();
     handlers = new Set<Handler>();
     add([head, ...rest]: string[], h: Handler) {

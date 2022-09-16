@@ -83,7 +83,7 @@ export async function call<P extends RPCParamResult, R extends RPCParamResult>(
         }).catch((err) => {
             clearTimeout(timeoutId);
             client.unsubscribe(responseTopic);
-            rjct({ message: "pub/sub error", data: err });
+            rjct({ message: `pub/sub error: ${err}`, data: err });
         });
     });
     const { result, error } = MsgPack.decode(msg) as RPCResponse<R>;
