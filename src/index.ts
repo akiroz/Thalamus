@@ -1,24 +1,20 @@
 import { EventEmitter } from "events";
-import MQEmitter, { Message } from "@akiroz/mqemitter";
 import * as MQTT from "./asyncWrapper";
 import * as RPC from "./rpc";
+import Dispatcher from "./dispatcher";
 
-type SubHandler = (payload: Uint8Array, topic: string) => Promise<void>;
-type MQHandler = (message: { topic: string; message: Uint8Array }, done: () => void) => void;
+type SubHandler = (payload: Uint8Array, topic: string) => any;
 
 export default class Thalamus extends EventEmitter {
     subDebounceWindow = 10;
     subDebounceState = null as {
         topics: Set<string>;
-        event: EventEmitter;
         promise: Promise<void>;
-        timeout: NodeJS.Timeout;
         doSubscribeLock: boolean;
     };
-    emitter = MQEmitter();
     servers: MQTT.AsyncMqttClient[];
     persistantTopics = new Set<string>();
-    handlers = new WeakMap<SubHandler, MQHandler>();
+    dispatcher = new Dispatcher();
 
     constructor(serverOptList: MQTT.IClientOptions[] = []) {
         super();
@@ -30,7 +26,7 @@ export default class Thalamus extends EventEmitter {
         for (let i = 0; i < this.servers.length; i++) {
             this.servers[i].on("connect", async () => {
                 this.emit("connect", i);
-                if(this.persistantTopics.size > 0) {
+                if (this.persistantTopics.size > 0) {
                     try {
                         await this.servers[i].subscribeAsync([...this.persistantTopics], { qos: 0 });
                     } catch (err) {
@@ -41,7 +37,7 @@ export default class Thalamus extends EventEmitter {
             });
             this.servers[i].on("close", () => this.emit("close", i));
             this.servers[i].on("error", (err) => this.emit("error", err, i));
-            this.servers[i].on("message", (topic, message) => this.emitter.emit({ topic, message } as Message));
+            this.servers[i].on("message", (topic, msg) => this.dispatcher.emit(topic, msg));
         }
     }
 
@@ -62,21 +58,16 @@ export default class Thalamus extends EventEmitter {
 
     async doSubscribe() {
         this.subDebounceState.doSubscribeLock = true;
-        try {
-            const conn = this.servers.filter(s => s.connected);
-            await Promise.all(conn.map(async (srv) => {
-                try {
-                    await srv.subscribeAsync([...this.subDebounceState.topics], { qos: 0 });
-                } catch (err) {
-                    console.warn(`[Thalamus] doSubscribe failed, reconnect...`, err);
-                    srv.reconnect();
-                    throw err;
-                }
-            }));
-            this.subDebounceState.event.emit("sub");
-        } catch (err) {
-            this.subDebounceState.event.emit("err", err);
-        }
+        const conn = this.servers.filter(s => s.connected);
+        await Promise.all(conn.map(async (srv) => {
+            try {
+                await srv.subscribeAsync([...this.subDebounceState.topics], { qos: 0 });
+            } catch (err) {
+                console.warn(`[Thalamus] doSubscribe failed, reconnect...`, err);
+                srv.reconnect();
+                throw err;
+            }
+        }));
         this.subDebounceState = null;
     }
 
@@ -85,41 +76,29 @@ export default class Thalamus extends EventEmitter {
         handler: SubHandler,
         opts: { persistent: boolean } = { persistent: true }
     ): Promise<void> {
-        const h = ({ topic, message }, done) => (done(), handler(message, topic));
-
-        if(opts.persistent) {
+        if (opts.persistent) {
             this.persistantTopics.add(topic);
-            this.handlers.set(handler, h);
-            this.emitter.on(topic, h);
+            this.dispatcher.on(topic, handler);
             if (this.subDebounceState) {
-                if(this.subDebounceState.doSubscribeLock) throw Error("doSubscribe in progress");
+                if (this.subDebounceState.doSubscribeLock) throw Error("doSubscribe in progress");
                 this.subDebounceState.topics.add(topic);
-                clearTimeout(this.subDebounceState.timeout);
-                this.subDebounceState.timeout = setTimeout(() => this.doSubscribe(), this.subDebounceWindow);
             } else {
-                const ee = new EventEmitter();
                 this.subDebounceState = {
-                    topics: new Set([topic]),
-                    event: ee,
-                    promise: new Promise((rsov, rjct) => {
-                        ee.once("sub", rsov);
-                        ee.once("err", rjct);
-                    }),
-                    timeout: setTimeout(() => this.doSubscribe(), this.subDebounceWindow),
                     doSubscribeLock: false,
+                    topics: new Set([topic]),
+                    promise: new Promise(r => setTimeout(r, this.subDebounceWindow)).then(this.doSubscribe),
                 };
             }
             await this.subDebounceState.promise;
         } else {
             const conn = this.servers.filter(s => s.connected);
-            this.handlers.set(handler, h);
-            this.emitter.on(topic, h);
+            this.dispatcher.on(topic, handler);
             await Promise.all(conn.map(s => s.subscribeAsync(topic, { qos: 0 })));
         }
     }
 
     async unsubscribe(topic: string, handler?: SubHandler): Promise<void> {
-        this.emitter.removeListener(topic, handler && this.handlers.get(handler));
+        this.dispatcher.removeListener(topic, handler);
         const conn = this.servers.filter(s => s.connected);
         await Promise.all(conn.map(s => s.unsubscribeAsync(topic)));
     }

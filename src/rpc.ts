@@ -1,14 +1,5 @@
 import * as MsgPack from "@msgpack/msgpack";
-
-function encodeBase64URL(data: Uint8Array): string {
-    const base64 = Buffer
-        ? Buffer.from(data).toString("base64")
-        : btoa(String.fromCharCode(...data));
-    return base64
-        .replace(/=/g, "")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_");
-}
+import { Base64 } from "js-base64";
 
 function generateCallId(size: number): Uint8Array {
     if (typeof window !== 'undefined') {
@@ -76,7 +67,7 @@ export async function call<P extends RPCParamResult, R extends RPCParamResult>(
 ): Promise<R> {
     opt = Object.assign({}, defaultCallOptions, opt);
     const id = generateCallId(opt.idSize);
-    const strId = encodeBase64URL(id);
+    const strId = Base64.fromUint8Array(id, true);
     const responseTopic = `${topic}/${strId}`;
     const msg = await new Promise<Uint8Array>((rsov, rjct) => {
         const timeoutId = setTimeout(() => {
@@ -111,7 +102,7 @@ export async function register<P extends RPCParamResult, R extends RPCParamResul
         if (!msg) throw Error(`Invalid payload: ${payload}`);
         const { id, params } = msg;
         if (!id) throw Error("Missing id in RPC call");
-        const strId = encodeBase64URL(id);
+        const strId = Base64.fromUint8Array(id, true);
         if (idDedup.has(strId)) throw Error("Duplicate call request");
         idDedup.put(strId);
         const response = await handler(params, msgTopic, ctx)

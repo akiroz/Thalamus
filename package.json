@@ -1,12 +1,19 @@
 {
     "name": "@akiroz/thalamus",
-    "version": "0.2.4",
+    "version": "0.3.0",
     "repository": "github:akiroz/Thalamus",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "scripts": {
         "prepublish": "tsc",
         "test": "ts-node test/index.ts"
+    },
+    "dependencies": {
+        "@akiroz/mqemitter": "^4.5.1",
+        "@msgpack/msgpack": "^2.7.2",
+        "events": "^3.3.0",
+        "js-base64": "^3.7.2",
+        "mqtt": "^4.3.7"
     },
     "devDependencies": {
         "@types/node": "^16.9.6",
@@ -26,11 +33,5 @@
         "hooks": {
             "pre-commit": "tsc --noEmit && pretty-quick --staged"
         }
-    },
-    "dependencies": {
-        "@akiroz/mqemitter": "^4.5.1",
-        "@msgpack/msgpack": "^2.7.2",
-        "events": "^3.3.0",
-        "mqtt": "^4.3.7"
     }
 }
