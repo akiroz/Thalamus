@@ -2,6 +2,10 @@ import "ts-mocha";
 import Thalamus from "../src";
 import Dispatcher, { Node } from "../src/dispatcher";
 import assert from "assert";
+import { inspect } from "util";
+
+// Dump node tree
+// console.log(inspect(node, { depth: null }));
 
 describe("Dispatcher", () => {
     const h = () => {};
@@ -45,9 +49,15 @@ describe("Dispatcher", () => {
 
     it("remove handler", () => {
         node.add(["a", "b", "c"], h);
-        node.add(["a", "+", "c"], h2);
+        node.add(["a", "b", "c"], h2);
+        node.rm(["a", "b", "c"], h);
+        assert.deepStrictEqual([h2], node.get(["a", "b", "c"]));
+    });
+
+    it("remove all handler", () => {
+        node.add(["a", "b", "c"], h);
+        node.add(["a", "b", "c"], h2);
         node.rm(["a", "b", "c"]);
-        node.rm(["a", "+", "c"]);
         assert.deepStrictEqual([], node.get(["a", "b", "c"]));
     });
 

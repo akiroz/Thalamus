@@ -12,14 +12,16 @@ export class Node {
             this.paths.get(head).add(rest, h);
         }
     }
-    rm([head, ...rest]: string[], h?: Handler) {
+    rm([head, ...rest]: string[], h?: Handler): boolean {
         if(!head) {
             if(h) this.handlers.delete(h);
             else this.handlers = new Set();
-        } else if(this.paths.has(head)) {
-            this.paths.get(head).rm(rest, h);
-            if(this.paths.get(head).handlers.size < 1) this.paths.delete(head);
         }
+        if(this.paths.has(head)) {
+            const empty = this.paths.get(head).rm(rest, h);
+            if(empty) this.paths.delete(head);
+        }
+        return this.handlers.size < 1 && this.paths.size < 1;
     }
     get([head, ...rest]: string[]): Handler[] {
         if(!head) return [...this.handlers];
