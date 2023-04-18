@@ -1,5 +1,6 @@
 import * as MsgPack from "@msgpack/msgpack";
 import { Base64 } from "js-base64";
+import { EventEmitter } from "events";
 
 function generateCallId(size: number): Uint8Array {
     if (typeof window !== 'undefined') {
@@ -54,6 +55,9 @@ export type PubSubClient<C> = {
     unsubscribe(topic: string): Promise<void>;
 };
 
+const subscribedPrefix = new Map<string, Promise<void>>();
+const responseMessage = new EventEmitter();
+
 export const defaultCallOptions = {
     timeout: 10000, // ms
     idSize: 16, // bytes
@@ -66,26 +70,38 @@ export async function call<P extends RPCParamResult, R extends RPCParamResult>(
     opt: Partial<typeof defaultCallOptions> = defaultCallOptions
 ): Promise<R> {
     opt = Object.assign({}, defaultCallOptions, opt);
-    const id = generateCallId(opt.idSize);
-    const strId = Base64.fromUint8Array(id, true);
-    const responseTopic = `${topic}/${strId}`;
-    const msg = await new Promise<Uint8Array>((rsov, rjct) => {
+    const callId = generateCallId(opt.idSize);
+    const responsePrefix = `${topic}/+`;
+    const responseTopic = `${topic}/${Base64.fromUint8Array(callId, true)}`;
+    
+    const msg = await new Promise<Uint8Array>(async (rsov, rjct) => {
         const timeoutId = setTimeout(() => {
-            client.unsubscribe(responseTopic);
-            rjct({ message: "timeout", data: { topic, params, opt, id } });
+            responseMessage.removeAllListeners(responseTopic);
+            rjct({ message: "timeout", data: { topic, params, opt, id: callId } });
         }, opt.timeout);
-        client.subscribe(responseTopic, async (msg) => {
+
+        try {
+            if(!subscribedPrefix.has(responsePrefix)) {
+                subscribedPrefix.set(responsePrefix, client.subscribe(responsePrefix, async (msg, topic) => {
+                    responseMessage.emit(topic, msg);
+                }).catch(err => {
+                    subscribedPrefix.delete(responsePrefix);
+                    return Promise.reject(err);
+                }));
+            }
+            await subscribedPrefix.get(responsePrefix);
+            responseMessage.once(responseTopic, msg => {
+                clearTimeout(timeoutId);
+                rsov(msg);
+            });
+            await client.publish(topic, MsgPack.encode({ id: callId, params }));
+        } catch(err) {
             clearTimeout(timeoutId);
-            client.unsubscribe(responseTopic);
-            rsov(msg);
-        }, { persistent: false }).then(() => {
-            return client.publish(topic, MsgPack.encode({ id, params }));
-        }).catch((err) => {
-            clearTimeout(timeoutId);
-            client.unsubscribe(responseTopic);
+            responseMessage.removeAllListeners(responseTopic);
             rjct({ message: `pub/sub error: ${err}`, data: err });
-        });
+        }
     });
+    
     const { result, error } = MsgPack.decode(msg) as RPCResponse<R>;
     if (error) throw error;
     return result;
